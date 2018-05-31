@@ -1,7 +1,9 @@
 let featuredEntries = $("#features")
 let details = $("#details")
 
-fetch('http://www.omdbapi.com/?s=batman&apikey=2719bf93').then(function(response){
+const API_KEY= '2719bf93'
+
+fetch('http://www.omdbapi.com/?s=batman&apikey='+API_KEY).then(function(response){
   return response.json()
 }).then(function(json){
   featuredEntries.html('')
@@ -28,7 +30,7 @@ fetch('http://www.omdbapi.com/?s=batman&apikey=2719bf93').then(function(response
 })
 
 function displayDetails(imdbid){
-  fetch('http://www.omdbapi.com/?i='+imdbid+'&apikey=2719bf93').then(function(response){
+  fetch('http://www.omdbapi.com/?i='+imdbid+`&apikey=${API_KEY}`).then(function(response){
     return response.json()
   }).then(function(json){
     console.log(json)
