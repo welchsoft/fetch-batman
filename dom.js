@@ -1,50 +1,128 @@
-let featuredEntries = $("#features")
+let orders = $("#orders")
 let details = $("#details")
 
-const API_KEY= '2719bf93'
+let searchTextBox = $('#searchTextBox')
+let searchBtn = $('#searchBtn')
+let allBtn = $('#allBtn')
 
-fetch('http://www.omdbapi.com/?s=batman&apikey='+API_KEY).then(function(response){
+let orderEmailTextBox = $('#orderEmailTextBox')
+let orderTextBox = $('#orderTextBox')
+let postBtn = $('#postBtn')
+
+fetch('http://dc-coffeerun.herokuapp.com/api/coffeeorders/').then(function(response){
   return response.json()
 }).then(function(json){
-  featuredEntries.html('')
-  json.Search.forEach(function(item){
+  for (let order in json){
+  generateCard(json[order])
+}
 
-    let entry = $("<div>").html(`<div class="card">
-    <img class="card-img-top" src="${item.Poster}" alt="Card image cap">
-    <div class="card-body">
-      <h5 class="card-title">${item.Title} (${item.Year})</h5>
-      <p class="card-text">Media: ${item.Type}</p>
-      <footer class="blockquote-footer">
-        <small class="text-muted">
-          IMDB ID: ${item.imdbID}
-        </small>
-      </footer>
-    </div>
-  </div>`)
-  entry.click(function(){
-    displayDetails(item.imdbID)
-  })
 
-  featuredEntries.append(entry)
-  })
+searchBtn.click(function(){
+  search(searchTextBox.val())
+  searchTextBox.val('')
 })
 
-function displayDetails(imdbid){
-  fetch('http://www.omdbapi.com/?i='+imdbid+`&apikey=${API_KEY}`).then(function(response){
+allBtn.click(function(){
+  orders.html('')
+  for (let order in json){
+      generateCard(json[order])
+}
+})
+
+postBtn.click(function(){
+  makeOrder(orderEmailTextBox.val(), orderTextBox.val())
+  orderEmailTextBox.val('')
+  orderTextBox.val('')
+})
+
+}) //end of the fetch command
+
+function generateCard(order){
+  let entry = $("<div>").html(`
+    <div class="card horizontal">
+      <div class="card-image">
+      </div>
+        <div class="card-stacked">
+            <div class="card-content">
+              <h5>${order['emailAddress']}</h5>
+              <p>${order['coffee']} <br> <small class="text-muted">${order['_id']}</small></p>
+            `)
+
+            let deleteBtn = $("<div>").html(`
+          <a href="#">ORDER COMPLETE!</a>
+          </div>`).addClass("card-action")
+          deleteBtn.click(function(){
+            deleteOrder(order['emailAddress'])
+          })
+          entry.append(deleteBtn)
+        entry.append(`</div>
+        </div>
+      </div>`)
+
+orders.append(entry)
+}
+
+/*function generateCard1(order){
+  let entry = $("<div>").html(`<div class="card horizontal">
+      <div class="card-image">
+      </div>
+      <div class="card-stacked">
+          <div class="card-content">
+            <h5>${order['emailAddress']}</h5>
+            <p>${order['coffee']} <br> <small class="text-muted">${order['_id']}</small></p>
+        </div>
+        <div class="card-action">
+          <a href="#">ORDER COMPLETE</a>
+        </div>
+      </div>
+    </div>`)
+    let deleteBtn = $("#card-action")
+    deleteBtn.click(function(){
+      deleteOrder(order['emailAddress'])
+    })
+
+orders.append(entry)
+}*/
+
+function search(email){
+  fetch('http://dc-coffeerun.herokuapp.com/api/coffeeorders/'+email).then(function(response){
+    return response.json()
+  }).then(function(json){
+    orders.html('')
+    generateCard(json)
+
+  })
+}
+
+function deleteOrder(email){
+  fetch('http://dc-coffeerun.herokuapp.com/api/coffeeorders/'+email, {
+    method: 'DELETE'
+  }).then(function(response){
     return response.json()
   }).then(function(json){
     console.log(json)
-    let detailEntry = $("<div>").html(`<div class="card mb-3">
-  <img class="card-img-top" src="${json.Poster}" width="300" height="400" alt="Card image cap">
-  <div class="card-body">
-    <h5 class="card-title">${json.Title}</h5>
-    <p class="card-text">Actors: ${json.Actors} <br>Awards: ${json.Awards} <br>BoxOffice: ${json.BoxOffice} <br>Country: ${json.Country} <br>
-    DVD: ${json.DVD} <br>Director: ${json.Director} <br>Genre: ${json.Genre} <br>Language: ${json.Language} <br>Metascore: ${json.Metascore} <br>
-    Plot: ${json.Plot} <br>Production: ${json.Production} <br>Rated: ${json.Rated} <br>Ratings: ${json.Ratings[0].Source}:${json.Ratings[0].Value} ${json.Ratings[1].Source}:${json.Ratings[1].Value} ${json.Ratings[2].Source}:${json.Ratings[2].Value}  <br>Released: ${json.Released} <br>
-    Runtime: ${json.Runtime} <br>Type: ${json.Type} <br>Website: ${json.Website} <br>Writer: ${json.Writer} <br>Year: ${json.Year} <br>ImdbID: ${json.imdbID} <br>
-    ImdbRating: ${json.imdbRating} <br>Imdbvotes: ${json.imdbVotes} <br></p>
-    <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-  </div>`)
-  details.html(detailEntry)
-})
+  })
+}
+
+function makeOrder(orderEmail, orderDetails){
+  let postOrder = {
+    coffee: orderDetails,
+    emailAddress: orderEmail
+  }
+  sendPOST(postOrder)
+}
+
+
+function sendPOST(postOrder){
+  fetch('http://dc-coffeerun.herokuapp.com/api/coffeeorders/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(postOrder)
+  }).then(function(response){
+    return response.json()
+  }).then(function(json){
+    console.log(json)
+  })
 }
